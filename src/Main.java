@@ -21,8 +21,10 @@ public class Main {
     }
 
     public static String chatGPT(String message) {
-        String url = "https://api-fakell.x10.mx/v1/chat/completions/";
-        String apiKey = "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";
+        String url = "https://api.openai.com/v1/chat/completions";
+        // The API key should be stored securely and not hardcoded into the application.
+        // For example, it could be stored in an environment variable.
+        String apiKey = System.getenv("OPENAI_API_KEY");
         String model = "gpt-3.5-turbo";
 
         try {
@@ -41,25 +43,31 @@ public class Main {
             writer.flush();
             writer.close();
 
-            //Get the response
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
+            // Check the HTTP response code
+            int responseCode = con.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                //Get the response
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
 
-            String contentSubstring = "\"content\":\"";
-            int contentIndex = response.indexOf(contentSubstring);
+                String contentSubstring = "\"content\":\"";
+                int contentIndex = response.indexOf(contentSubstring);
 
-            System.out.println("API Response: " + response.toString());
-            if (contentIndex != -1){
-                return response.substring(contentIndex + contentSubstring.length()).split("\"")[0].substring(4);
+                System.out.println("API Response: " + response.toString());
+                if (contentIndex != -1){
+                    return response.substring(contentIndex + contentSubstring.length()).split("\"")[0].substring(4);
+                } else {
+                    return "Sorry, I don't understand.";
+                }
             } else {
-                return "Sorry, I don't understand.";
+                System.out.println("HTTP error occurred: " + responseCode);
+                return "Sorry, I can't respond right now.";
             }
-
 
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
